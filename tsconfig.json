@@ -18,8 +18,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
   },
+  "exclude": [
+    "node_modules",
+    "wasm"
+  ],
   "include": [
     "src"
   ]

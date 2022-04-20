@@ -25,6 +25,12 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>React App</title>
+    <script type="module">
+      import * as wasm from "./build/debug.js";
+      console.log('wasm', wasm)
+      console.log('wasm', wasm.add(1,2))
+      window.wasm = wasm
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
