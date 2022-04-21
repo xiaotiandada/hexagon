@@ -11,9 +11,13 @@
     "@types/node": "^16.11.27",
     "@types/react": "^18.0.5",
     "@types/react-dom": "^18.0.1",
+    "konva": "^8.3.5",
     "react": "^18.0.0",
     "react-dom": "^18.0.0",
+    "react-hexgrid": "^1.0.4",
+    "react-konva": "^18.0.0-0",
     "react-scripts": "5.0.1",
+    "react-wasm": "^1.0.1",
     "typescript": "^4.6.3",
     "web-vitals": "^2.1.4"
   },
@@ -46,7 +50,6 @@
     "@typescript-eslint/parser": "^5.20.0",
     "eslint": "^8.13.0",
     "eslint-config-xo": "^0.40.0",
-    "eslint-plugin-react": "^7.29.4",
-    "node:fs/promises": "node:fs/promises"
+    "eslint-plugin-react": "^7.29.4"
   }
 }
