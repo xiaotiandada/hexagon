@@ -3,6 +3,22 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import Stats from 'stats-js';
+
+const stats = new Stats();
+document.body.appendChild(stats.dom);
+
+function animate() {
+	stats.begin();
+
+	// Monitored code goes here
+
+	stats.end();
+
+	requestAnimationFrame(animate);
+}
+
+requestAnimationFrame(animate);
 
 ReactDOM.render(
 	<React.StrictMode>

@@ -6,7 +6,7 @@ import {geoToH3, kRing, polyfill, h3SetToMultiPolygon} from 'h3-js';
 import * as PIXI from 'pixi.js';
 import {utils} from 'pixi.js';
 import * as Honeycomb from 'honeycomb-grid';
-import {Stage, Text, Container, Graphics} from '@inlet/react-pixi';
+import {Stage, Text, Container, Graphics, Sprite} from '@inlet/react-pixi';
 import {useApp} from '@inlet/react-pixi';
 import uniqolor from 'uniqolor';
 
@@ -24,6 +24,15 @@ const _height = document.body.clientHeight || document.documentElement.clientHei
 interface Draggable extends PIXI.DisplayObject {
 	data: PIXI.InteractionData | null;
 	dragging: boolean;
+	hexagonData: {
+		point: { x: number, y: number },
+		lineColorString: string,
+		fillColorString: string,
+		lineColorHex: number,
+		fillColorHex: number,
+	}
+	texture?: PIXI.Texture;
+	clicked?: boolean
 }
 
 const ExampleComponent = (): any => {
@@ -56,6 +65,53 @@ const app = new PIXI.Application({
 	antialias: true,
 	resolution: 1,
 });
+
+const image1 = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/693612/IaUrttj.png';
+const image = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/693612/coin.png';
+const gooseIdle = PIXI.Texture.from('https://i.imgur.com/NUl2k9K.png');
+const gooseHurt = PIXI.Texture.from('https://i.imgur.com/igFI3Ju.png');
+const gooseAngry = PIXI.Texture.from('https://i.imgur.com/UWKnm2L.png');
+
+const imageTexture = PIXI.Texture.from(image);
+const hexagonTexture = PIXI.Texture.from('https://i.imgur.com/K2nQTWa.png');
+
+const HexagonSprite = (): any => {
+	const Hex = Honeycomb.extendHex({size: 50});
+	const Grid = Honeycomb.defineGrid(Hex);
+	const GridHexagon = Grid.hexagon({
+		radius: 3,
+		center: [0, 0],
+	});
+	return (
+		<>
+			{
+				GridHexagon.map(hex => {
+					const point = hex.toPoint();
+					console.log('point', point);
+					return (
+						<Sprite
+							interactive
+							key={point.x + '_' + point.y}
+							image={'https://i.imgur.com/K2nQTWa.png'}
+							width={100}
+							height={100}
+							anchor={0.5}
+							x={point.x}
+							y={point.y}
+							click={(event: PIXI.InteractionEvent) => {
+								const sprite = event.currentTarget as Draggable;
+								console.log('event', sprite);
+								sprite.clicked = !sprite.clicked;
+								sprite.texture = sprite.clicked ? gooseIdle : hexagonTexture;
+							}}
+						/>
+					);
+				})
+			}
+		</>
+	);
+};
+
 function App() {
 	const onDragStart = (event: PIXI.InteractionEvent) => {
 		const sprite = event.currentTarget as Draggable;
@@ -95,65 +151,54 @@ function App() {
 		}).forEach(hex => {
 			const point = hex.toPoint();
 			console.log('point', point);
-			// Add the hex's position to each of its corner points
-			// const corners = hex.corners().map(corner => corner.add(point));
-			// // Separate the first from the other corners
-			// const [firstCorner, ...otherCorners] = corners;
 
-			// // Move the "pen" to the first corner
-			// graphics.moveTo(firstCorner.x, firstCorner.y);
-			// // Draw lines to the other corners
-			// otherCorners.forEach(({x, y}) => {
-			// 	graphics.beginFill(utils.string2hex('#4caf50'));
-			// 	graphics.lineTo(x, y);
-			// });
-			// // Finish at the first corner
-			// graphics.lineTo(firstCorner.x, firstCorner.y);
+			const colorRandomResult = uniqolor.random();
+			const colorLineResult = {color: '#15a51b'};
+			const colorFillResult = {color: '#05bf1d'};
+			const lineColor = utils.string2hex(colorLineResult.color);
+			const fillColor = utils.string2hex(colorFillResult.color);
 
-			graphics.lineStyle(1, utils.string2hex('#265128'));
-			const colorResult = uniqolor.random();
-			graphics.beginFill(utils.string2hex(colorResult.color));
+			graphics.lineStyle(1, lineColor);
+			graphics.beginFill(fillColor);
 			const corners = hex.corners().map(corner => corner.add(point));
 			graphics.drawPolygon(corners);
-			graphics.custommmmmm = point;
+			graphics.hexagonData = {
+				point,
+				lineColorString: colorLineResult.color,
+				fillColorString: colorFillResult.color,
+				lineColorHex: lineColor,
+				fillColorHex: fillColor,
+			};
+			// Graphics.click = function (event: any) {
+			// 	console.log('event', event, this);
+
+			// 	event.target.scale.x *= 1.25;
+			// 	event.target.scale.y *= 1.25;
+			// };
 			graphics.endFill();
 		});
 	}, []);
 
+	const handleGraphicsClick = (event: PIXI.InteractionEvent) => {
+		const sprite = event.currentTarget as Draggable;
+		const hexData = sprite.hexagonData;
+		console.log('sprite', sprite);
+		console.log('hexData', hexData);
+	};
+
 	return (
 		<div>
 			<Stage width={_width} height={_height} options={{backgroundAlpha: 0}}>
-				<Container
+				<Container x={600} y={600}
 					anchor={0.5}
-					// X={10}
-					// y={10}
 					interactive
 					buttonMode
 					pointerdown={onDragStart}
 					pointerup={onDragEnd}
 					pointerupoutside={onDragEnd}
 					pointermove={onDragMove}>
-					<Graphics draw={draw}
-						interactive
-						click={(event: PIXI.InteractionEvent) => {
-							console.log('xxx', event);
-							console.log('event.currentTarget', event.currentTarget);
-							console.log('event.target', event.target);
-						}}
-					/>
+					<HexagonSprite />
 				</Container>
-				<Text
-					text="Hello World"
-					x={100}
-					y={100}
-					anchor={0.5}
-					interactive
-					buttonMode
-					pointerdown={onDragStart}
-					pointerup={onDragEnd}
-					pointerupoutside={onDragEnd}
-					pointermove={onDragMove}
-				/>
 			</Stage>
 		</div>
 	);
