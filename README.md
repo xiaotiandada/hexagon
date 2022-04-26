@@ -10,6 +10,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
   - https://github.com/Rory-Sullivan/Hexagonal-Path-Finding-Visualiser
 - [ ] 修正 sprite 定位
 - [ ] 如果支持寻找路径 视角跟随？
+- [ ] 使用 WASM 计算？
 
 ## Available Scripts
 
