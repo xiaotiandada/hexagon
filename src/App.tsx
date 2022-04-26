@@ -1,16 +1,12 @@
 /* eslint-disable no-unused-vars */
 import React, {useEffect, useRef, useState, useCallback, useMemo} from 'react';
 import {useWasm} from 'react-wasm';
-import {drawGrid} from './utils';
-import {geoToH3, kRing, polyfill, h3SetToMultiPolygon} from 'h3-js';
 import * as PIXI from 'pixi.js';
 import {utils, Texture} from 'pixi.js';
 import * as Honeycomb from 'honeycomb-grid';
 import {Stage, Text, Container, Graphics, Sprite} from '@inlet/react-pixi';
-import {useApp} from '@inlet/react-pixi';
 import uniqolor from 'uniqolor';
 import {useSpring, animated} from 'react-spring';
-import {Stage as StageAnimated, Sprite as SpriteAnimated} from '@inlet/react-pixi/animated';
 import {random} from 'lodash';
 
 let type = 'WebGL';
@@ -23,6 +19,19 @@ PIXI.utils.sayHello(type);
 
 const _width = document.body.clientWidth || document.documentElement.clientWidth || window.innerWidth;
 const _height = document.body.clientHeight || document.documentElement.clientHeight || window.innerHeight;
+
+const image1 = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/693612/IaUrttj.png';
+const image = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/693612/coin.png';
+const gooseIdle = PIXI.Texture.from('https://i.imgur.com/NUl2k9K.png');
+const gooseHurt = PIXI.Texture.from('https://i.imgur.com/igFI3Ju.png');
+const gooseAngry = PIXI.Texture.from('https://i.imgur.com/UWKnm2L.png');
+const img = new Image();
+img.src = '/public/tree.png';
+const base = new PIXI.BaseTexture(img);
+const texture = new PIXI.Texture(base);
+
+const imageTexture = PIXI.Texture.from(image);
+const hexagonTexture = PIXI.Texture.from('https://i.imgur.com/K2nQTWa.png');
 
 interface Draggable extends PIXI.DisplayObject {
 	data: PIXI.InteractionData | null;
@@ -72,64 +81,6 @@ const ExampleComponent = (): any => {
 	return <div>1 + 2 = {instance.exports.add(1, 2)}</div>;
 };
 
-const app = new PIXI.Application({
-	width: window.innerWidth,
-	height: window.innerHeight,
-	backgroundAlpha: 0,
-	antialias: true,
-	resolution: 1,
-});
-
-const image1 = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/693612/IaUrttj.png';
-const image = 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/693612/coin.png';
-const gooseIdle = PIXI.Texture.from('https://i.imgur.com/NUl2k9K.png');
-const gooseHurt = PIXI.Texture.from('https://i.imgur.com/igFI3Ju.png');
-const gooseAngry = PIXI.Texture.from('https://i.imgur.com/UWKnm2L.png');
-const img = new Image();
-img.src = '/public/tree.png';
-const base = new PIXI.BaseTexture(img);
-const texture = new PIXI.Texture(base);
-
-const imageTexture = PIXI.Texture.from(image);
-const hexagonTexture = PIXI.Texture.from('https://i.imgur.com/K2nQTWa.png');
-
-const HexagonSprite = (): any => {
-	const Hex = Honeycomb.extendHex({size: 50});
-	const Grid = Honeycomb.defineGrid(Hex);
-	const GridHexagon = Grid.hexagon({
-		radius: 3,
-		center: [0, 0],
-	});
-	return (
-		<>
-			{
-				GridHexagon.map(hex => {
-					const point = hex.toPoint();
-					console.log('point', point);
-					return (
-						<Sprite
-							interactive
-							key={point.x + '_' + point.y}
-							image={'https://i.imgur.com/K2nQTWa.png'}
-							width={100}
-							height={100}
-							anchor={0.5}
-							x={point.x}
-							y={point.y}
-							click={(event: PIXI.InteractionEvent) => {
-								const sprite = event.currentTarget as Draggable;
-								console.log('event', sprite);
-								sprite.clicked = !sprite.clicked;
-								sprite.texture = sprite.clicked ? gooseIdle : hexagonTexture;
-							}}
-						/>
-					);
-				})
-			}
-		</>
-	);
-};
-
 function App() {
 	const Hex = Honeycomb.extendHex({size: 50});
 	const Grid = Honeycomb.defineGrid(Hex);
@@ -142,6 +93,27 @@ function App() {
 
 	const [currentPoint, setCurrentPoint] = useState<Honeycomb.Point>();
 	const [treePoint, setTreePoint] = useState<Honeycomb.Point[]>([]);
+
+	const AnimatedSprite = animated(Sprite);
+	const [spring, setSpring] = useSpring(() => ({
+		x: 0,
+		y: 0,
+		config: {
+			tension: 210,
+			friction: 20,
+			clamp: true,
+			velocity: 1,
+		},
+		onStart: () => console.log('start'),
+	}));
+
+	const generateRandomTree = useCallback(() => {
+		const trees = GridHexagon.filter(hex => {
+			const point = hex.toPoint();
+			return random(0, 5) < 1 && point.x !== 0 && point.y !== 0;
+		});
+		setTreePoint(trees.map(hex => hex.toPoint()));
+	}, []);
 
 	const onDragStart = (event: PIXI.InteractionEvent) => {
 		const sprite = event.currentTarget as Draggable;
@@ -169,39 +141,6 @@ function App() {
 			sprite.y = newPosition.y;
 		}
 	};
-
-	const draw = useCallback(graphics => {
-		// Render 10,000 hexes
-		GridHexagon.forEach(hex => {
-			const point = hex.toPoint();
-			// Console.log('point', point);
-
-			const colorRandomResult = uniqolor.random();
-			const colorLineResult = {color: '#1fbc34'};
-			const colorFillResult = {color: '#18a72b'};
-			const lineColor = utils.string2hex(colorLineResult.color);
-			const fillColor = utils.string2hex(colorFillResult.color);
-
-			graphics.lineStyle(1, lineColor);
-			graphics.beginFill(fillColor);
-			const corners = hex.corners().map(corner => corner.add(point));
-			graphics.drawPolygon(corners);
-			graphics.hexagonData = {
-				point,
-				lineColorString: colorLineResult.color,
-				fillColorString: colorFillResult.color,
-				lineColorHex: lineColor,
-				fillColorHex: fillColor,
-			};
-			// Graphics.click = function (event: any) {
-			// 	console.log('event', event, this);
-
-			// 	event.target.scale.x *= 1.25;
-			// 	event.target.scale.y *= 1.25;
-			// };
-			graphics.endFill();
-		});
-	}, []);
 
 	const handleGraphicsClick = (event: PIXI.InteractionEvent) => {
 		const sprite = event.currentTarget as Draggable;
@@ -292,27 +231,6 @@ function App() {
 		);
 	};
 
-	const AnimatedSprite = animated(Sprite);
-	const [spring, setSpring] = useSpring(() => ({
-		x: 0,
-		y: 0,
-		config: {
-			tension: 210,
-			friction: 20,
-			clamp: true,
-			velocity: 1,
-		},
-		onStart: () => console.log('start'),
-	}));
-
-	const generateRandomTree = useCallback(() => {
-		const trees = GridHexagon.filter(hex => {
-			const point = hex.toPoint();
-			return random(0, 5) < 1 && point.x !== 0 && point.y !== 0;
-		});
-		setTreePoint(trees.map(hex => hex.toPoint()));
-	}, []);
-
 	useEffect(() => {
 		generateRandomTree();
 
@@ -354,7 +272,6 @@ function App() {
 						y={spring.y}
 					/>
 				}
-
 				{
 					treePoint.map(point => (
 						<Container x={point.x} y={point.y} key={`${point.x}_${point.y}`}>
