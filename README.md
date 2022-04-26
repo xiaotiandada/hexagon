@@ -4,6 +4,12 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ![image](https://user-images.githubusercontent.com/24250627/165224550-8f057416-a9ff-4c6d-b247-0d12fab51d86.png)
 
+## TODO
+- [ ] 寻找路径
+  - https://www.redblobgames.com/grids/hexagons/#line-drawing
+  - https://github.com/Rory-Sullivan/Hexagonal-Path-Finding-Visualiser
+- [ ] 修正 sprite 定位
+- [ ] 如果支持寻找路径 视角跟随？
 
 ## Available Scripts
 
